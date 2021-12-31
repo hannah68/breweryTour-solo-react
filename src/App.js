@@ -5,15 +5,57 @@ import FilterForm from "./components/FilterForm";
 
 const App = () => {
     const [breweries, setBreweries] = useState([]);
-    const [filteredBreweries, setFilteredBreweries] = useState([]);
+    const [filteredBreweries, setFilteredBreweries] = useState([])
     const [selectedState, setSelectedState] = useState("");
     const [submit, setSubmit] = useState(false);
     const [cities, setCities] = useState([]);
-    const [brewType, setBrewType] = useState('');
+    const [filters, setFilters] = useState({
+        breweryType: "",
+        search: "",
+        filterCities: [],
+    });
+    
+   
+    console.log("State: ", { breweries, selectedState, filters, cities});
 
-    let ListOfBreweries = breweries;
-    console.log("State: ", { breweries, selectedState, brewType, filteredBreweries});
+    // const filterBySearch = (brew) => {
 
+    // }
+    const filterByCity = (brew) => {
+        if (filters.filterCities.includes(brew.city)) return true;
+    }
+
+    const filterByType = (brew) => {
+        if (filters.breweryType.includes(brew.brewery_type)) return true;
+    }
+
+    const filterAllBreweries = (brew) => {
+        if (filterByType(brew) && filterByCity(brew)) return brew;
+    }
+
+    useEffect(() => {
+        const brewArr = breweries.filter(brew => filterAllBreweries(brew));
+        setFilteredBreweries(brewArr);
+    }, [breweries, filters])
+    
+    console.log('check each brew',filteredBreweries);
+
+
+    const cleanCity = (breweryArr) => {
+        const updatedCity = breweryArr.map(brew => {
+            return brew.city
+        })
+        console.log('updatedCity', updatedCity);
+        // remove repetitive city
+        const cityArr = [...new Set(updatedCity)]
+        setFilters({...filters, filterCities: cityArr})
+    }
+
+    const renderBreweriesByState = (breweryArr) => {
+        const breweriesArr = breweryArr.filter(brew => brew.state.toUpperCase() === selectedState.toUpperCase());
+        return breweriesArr;
+    }
+    
     useEffect(() => {
         const fetchBreweryByState = async() => {
             const res = await fetch(`https://api.openbrewerydb.org/breweries?by_state=${selectedState}`)
@@ -21,14 +63,20 @@ const App = () => {
             const cleanData = breweryData.filter(type => {
                 return type.brewery_type=== 'micro' || type.brewery_type=== 'regional' || type.brewery_type=== 'brewpub'
             });
-            const numberOfBrew = cleanData.slice(0,10);
-            setBreweries(numberOfBrew);
+            const breweryArr = cleanData.slice(0,10);
+            setBreweries(breweryArr);
+            // const filteredArray = breweryArr.filter((brew) => filterAllBreweries(brew));
+            // setBreweries(filteredArray);
+            cleanCity(breweryArr)
+            // setBreweries(renderBreweriesByState(breweryArr))
+            // filteredBreweries(breweryArr);
         }
         if(submit){
             fetchBreweryByState();
         }
         setSubmit(false);
     }, [submit, selectedState])
+
 
     const handleSubmitState = (e) => {
         e.preventDefault();
@@ -39,39 +87,7 @@ const App = () => {
         setSelectedState(e.target.value);
     };
 
-    const handleTypeChange = (e) => {
-        setBrewType(e.target.value);
-    }
-
-    useEffect(() => {
-        if(breweries && !submit){
-            setFilteredBreweries(breweries);
-        }
-        if(selectedState && filteredBreweries && !submit){
-            const updatedCity = filteredBreweries.map(brew => brew.city);
-            setCities(updatedCity);
-        }
-    }, [selectedState, breweries, submit, setCities])
-
-    useEffect(() => {
-        if(brewType && !submit){
-            const filterByType = filteredBreweries.filter(brew => {
-                if(brew.brewery_type === brewType){
-                    return brew
-                }
-            });
-            setFilteredBreweries(filterByType);
-            console.log('inside brewtype', filterByType);
-            const updatedCity = filterByType.map(brew => brew.city)
-            setCities(updatedCity);
-        }
-    }, [brewType,submit, setCities])
-
-    if(brewType){
-        ListOfBreweries = filteredBreweries
-    }
     
-    console.log(cities);
     return (
         <>
             <Header
@@ -82,12 +98,14 @@ const App = () => {
                 <aside className="filters-section">
                     {selectedState && <FilterForm 
                         cities={cities}
-                        handleTypeChange={handleTypeChange}
-                    />}
+                        setFilters={setFilters}
+                        filters={filters}/>}
                 </aside>
-                <BrewerySection 
-                    ListOfBreweries={ListOfBreweries} 
+                <BrewerySection
+                    filteredBreweries={filteredBreweries}
+                    breweries={breweries} 
                     selectedState={selectedState}
+                    filters={filters}
                     />
             </main>
         </>

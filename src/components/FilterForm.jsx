@@ -2,7 +2,14 @@ import React from 'react'
 import FilterByCity from './FilterByCity'
 
 const FilterForm = (props) => {
-    const {cities, handleTypeChange} = props;
+    const {cities, filters, setFilters} = props;
+    const {filterCities} = props.filters;
+    
+
+    const handleTypeChange = (e) => {
+        setFilters({...filters, breweryType : e.target.value});  
+    }
+
     return (
         <>
             <h2>Filter By:</h2>
@@ -17,7 +24,7 @@ const FilterForm = (props) => {
                     <option value="brewpub">Brewpub</option>
                 </select>
             </form>
-            <FilterByCity cities={cities}/>
+            <FilterByCity filterCities={filterCities}/>
         </>
     )
 }

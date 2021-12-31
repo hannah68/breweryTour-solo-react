@@ -1,7 +1,7 @@
 import React from 'react'
 
 const FilterByCity = (props) => {
-    const {cities} = props;
+    const {filterCities} = props;
     return (
         <>
             <div className="filter-by-city-heading">
@@ -10,7 +10,7 @@ const FilterByCity = (props) => {
             </div>
             
             <form id="filter-by-city-form">
-                {cities.map((city,index) => {
+                {filterCities.map((city,index) => {
                     return(
                         <div key={index}>
                             <input type="checkbox" name={city} value={city}/>
